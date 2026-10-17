@@ -1,0 +1,36 @@
+{
+  // Tự động format code khi lưu
+  "editor.formatOnSave": true,
+
+  // Tự động format khi dán code vào
+  "editor.formatOnPaste": true,
+
+  // Tự động thêm dấu phẩy kết thúc (trailing comma) khi format - tính năng cực tiện của Dart
+  "dart.insertArgumentPlaceholders": false,
+  "dart.lineLength": 80,
+
+  // Tự động chạy fix-all linter khi lưu (tự thêm const, tự xóa unused imports)
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  // Quy định mặc định cho file Dart
+  "[dart]": {
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.rulers": [80],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false
+  },
+
+  // Format các file JSON và YAML
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.tabSize": 2
+  },
+  "[yaml]": {
+    "editor.tabSize": 2
+  }
+}
