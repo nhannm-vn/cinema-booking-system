@@ -14,6 +14,7 @@ import '../../../shared/widgets/skeleton_box.dart';
 import '../../movies/models/movie.dart';
 import '../../notifications/models/app_notification.dart';
 import '../../notifications/providers/notification_provider.dart';
+import '../../notifications/services/local_notification_service.dart';
 import '../models/cinema.dart';
 import '../models/showtime.dart';
 import '../providers/booking_provider.dart';
@@ -137,7 +138,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
       if (!mounted) return;
 
-      // Kích hoạt thông báo hệ thống tức thì
+      // Kích hoạt thông báo hộp thư In-App
       context.read<NotificationProvider>().addNotification(
             AppNotification(
               id: 'noti_${DateTime.now().millisecondsSinceEpoch}',
@@ -150,6 +151,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
               createdAt: DateTime.now(),
             ),
           );
+
+      // Kích hoạt thông báo đẩy hệ thống OS (Local Push Notification)
+      LocalNotificationService.instance.showBookingSuccessNotification(
+        bookingCode: widget.bookingCode,
+        movieTitle: widget.movie.title,
+        showtime: '${widget.showtime.format} · ${widget.cinema.name}',
+      );
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
