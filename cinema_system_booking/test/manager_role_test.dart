@@ -10,9 +10,7 @@ import 'package:cinema_booking_app/features/management/dashboard/screens/manager
 import 'package:cinema_booking_app/features/management/hub/screens/management_hub_screen.dart';
 import 'package:cinema_booking_app/features/management/providers/management_provider.dart';
 import 'package:cinema_booking_app/features/management/repositories/management_repository.dart';
-import 'package:cinema_booking_app/features/notifications/providers/notification_provider.dart';
 import 'package:cinema_booking_app/shared/models/app_user.dart';
-import 'package:cinema_booking_app/shared/widgets/app_scaffold_shell.dart';
 import 'package:cinema_booking_app/shared/widgets/seat_widget.dart';
 
 void main() {
