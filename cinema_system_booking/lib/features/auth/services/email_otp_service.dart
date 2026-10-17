@@ -44,8 +44,9 @@ class EmailOtpService {
   EmailOtpService._();
   static final EmailOtpService instance = EmailOtpService._();
 
-  /// URL Webhook gửi email (Có thể dùng Google Apps Script Web App hoặc Brevo/Resend API)
-  static String? emailWebhookUrl;
+  /// URL Webhook gửi email (Google Apps Script Web App của hệ thống)
+  static String? emailWebhookUrl =
+      'https://script.google.com/macros/s/AKfycbxx6bdwlq4bv-2ENrwuSSXD-ZOYwKkVA4GegCLsCo1R9LauL4UedTxqk-DHS7VzeQK_IQ/exec';
 
   final Map<String, _OtpRecord> _cache = {};
 
@@ -237,13 +238,14 @@ class EmailOtpService {
 
       request.add(utf8.encode(body));
       final response = await request.close();
-      if (response.statusCode == 200) {
-        debugPrint('Gửi email OTP qua Webhook thành công!');
+      if (response.statusCode == 200 || response.statusCode == 302) {
+        debugPrint(
+            '✅ Gửi email OTP thực tế qua Google Apps Script thành công (Status: ${response.statusCode})!');
       } else {
-        debugPrint('Webhook trả về mã lỗi: ${response.statusCode}');
+        debugPrint('⚠️ Webhook trả về mã lỗi: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Gửi email OTP qua Webhook gặp lỗi: $e');
+      debugPrint('❌ Gửi email OTP qua Webhook gặp lỗi: $e');
     }
   }
 }
