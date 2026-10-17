@@ -44,6 +44,8 @@ dependencies:
   # Media & Utilities
   cached_network_image: ^3.3.1
   url_launcher: ^6.2.5
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
 
 dev_dependencies:
   flutter_test:
