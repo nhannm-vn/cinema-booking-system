@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -19,6 +20,7 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.enabled = true,
     this.maxLines = 1,
+    this.inputFormatters,
   });
 
   final TextEditingController? controller;
@@ -35,6 +37,7 @@ class AppTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool enabled;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +63,7 @@ class AppTextField extends StatelessWidget {
           onFieldSubmitted: onSubmitted,
           enabled: enabled,
           maxLines: maxLines,
+          inputFormatters: inputFormatters,
           style: AppTextStyles.bodyMd.copyWith(color: AppColors.ink),
           cursorColor: AppColors.primary,
           decoration: InputDecoration(

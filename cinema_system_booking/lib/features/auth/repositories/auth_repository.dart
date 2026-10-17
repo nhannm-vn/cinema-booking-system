@@ -101,6 +101,7 @@ class AuthRepository {
     );
 
     final uid = cred.user!.uid;
+
     final newUser = AppUser(
       uid: uid,
       fullName: fullName.trim(),
@@ -117,6 +118,12 @@ class AuthRepository {
         .doc(uid)
         .set(newUser.toFirestore());
     return newUser;
+  }
+
+  Future<void> sendEmailVerification() async {
+    try {
+      await _authInstance.currentUser?.sendEmailVerification();
+    } catch (_) {}
   }
 
   /// Kỹ thuật khởi tạo người dùng nội bộ (Staff/Manager) bằng FirebaseApp phụ

@@ -8,6 +8,8 @@ import 'features/booking/providers/booking_provider.dart';
 import 'features/booking/repositories/booking_repository.dart';
 import 'features/movies/providers/movie_provider.dart';
 import 'features/movies/repositories/movie_repository.dart';
+import 'features/management/providers/management_provider.dart';
+import 'features/management/repositories/management_repository.dart';
 import 'features/notifications/providers/notification_provider.dart';
 import 'features/notifications/services/local_notification_service.dart';
 import 'features/splash/screens/splash_screen.dart';
@@ -46,12 +48,14 @@ class CinemaBookingApp extends StatelessWidget {
     this.authRepository,
     this.movieRepository,
     this.bookingRepository,
+    this.managementRepository,
     this.showSplash = true,
   });
 
   final AuthRepository? authRepository;
   final MovieRepository? movieRepository;
   final BookingRepository? bookingRepository;
+  final ManagementRepository? managementRepository;
   final bool showSplash;
 
   @override
@@ -71,6 +75,11 @@ class CinemaBookingApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => NotificationProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ManagementProvider(
+            repo: managementRepository ?? ManagementRepository(),
+          ),
         ),
       ],
       child: MaterialApp(

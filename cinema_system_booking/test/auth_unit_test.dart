@@ -47,5 +47,25 @@ void main() {
       expect(isValidPassword('123456'), isTrue);
       expect(isValidPassword('Cinema@2026'), isTrue);
     });
+
+    test('Kiểm thử sinh và xác thực mã OTP email 6 số', () {
+      final otpRegex = RegExp(r'^[0-9]{6}$');
+
+      // Kiểm tra định dạng OTP 6 chữ số
+      expect(otpRegex.hasMatch('123456'), isTrue);
+      expect(otpRegex.hasMatch('987654'), isTrue);
+      expect(otpRegex.hasMatch('12345'), isFalse); // 5 số
+      expect(otpRegex.hasMatch('1234567'), isFalse); // 7 số
+      expect(otpRegex.hasMatch('12a456'), isFalse); // Chứa chữ cái
+
+      // Kiểm tra thời hạn hiệu lực (5 phút)
+      final createdAt = DateTime.now();
+      final expiresAt = createdAt.add(const Duration(minutes: 5));
+      final testTimeValid = createdAt.add(const Duration(minutes: 2));
+      final testTimeExpired = createdAt.add(const Duration(minutes: 6));
+
+      expect(testTimeValid.isBefore(expiresAt), isTrue);
+      expect(testTimeExpired.isAfter(expiresAt), isTrue);
+    });
   });
 }

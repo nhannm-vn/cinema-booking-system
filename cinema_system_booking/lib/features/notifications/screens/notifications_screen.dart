@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -6,6 +7,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/ticket_card.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -46,59 +48,289 @@ class NotificationsScreen extends StatelessWidget {
     }
   }
 
+  void _openTicketBottomSheet(BuildContext context, String bookingId) {
+    final bookingProvider = context.read<BookingProvider>();
+    final bookings = bookingProvider.userBookings;
+    final matched = bookings.where((b) => b.id == bookingId).toList();
+
+    if (matched.isNotEmpty) {
+      final b = matched.first;
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (_, scrollController) => Container(
+            color: AppColors.canvas,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(LucideIcons.x, color: AppColors.ink),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ),
+                  TicketCard(
+                    bookingCode: b.id,
+                    movieTitle: b.movieTitle,
+                    cinemaName: b.cinemaName,
+                    roomName: b.roomName,
+                    format: b.format,
+                    showtime: b.showtimeStart,
+                    seatIds: b.seatIds,
+                    foodSummary: b.foodSummary,
+                    totalAmount: b.totalAmount,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Mã đơn vé: $bookingId'),
+          backgroundColor: AppColors.canvasElevated,
+        ),
+      );
+    }
+  }
+
   void _handleNotificationTap(BuildContext context, AppNotification n) async {
     final auth = context.read<AuthProvider>();
     final uid = auth.isAuthenticated ? auth.currentUser.uid : 'guest';
     context.read<NotificationProvider>().markAsRead(n.id, userId: uid);
 
-    if (n.bookingId != null) {
-      final bookingProvider = context.read<BookingProvider>();
-      final bookings = bookingProvider.userBookings;
-      final matched = bookings.where((b) => b.id == n.bookingId).toList();
+    // 1. THÔNG BÁO ĐẶT VÉ THÀNH CÔNG: Mở chi tiết vé điện tử & mã QR
+    if (n.type == 'bookingPaid') {
+      if (n.bookingId != null) {
+        _openTicketBottomSheet(context, n.bookingId!);
+      }
+      return;
+    }
 
-      if (matched.isNotEmpty) {
-        final b = matched.first;
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (ctx) => DraggableScrollableSheet(
-            initialChildSize: 0.85,
-            minChildSize: 0.5,
-            maxChildSize: 0.95,
-            builder: (_, scrollController) => Container(
-              color: AppColors.canvas,
-              child: SingleChildScrollView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                child: Column(
+    // 2. THÔNG BÁO ĐỒ ĂN BẮP NƯỚC: Mở hộp thoại hướng dẫn nhận món tại quầy
+    if (n.type == 'foodReady') {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.canvasElevated,
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.none),
+          title: Row(
+            children: [
+              const Icon(LucideIcons.utensils,
+                  color: Colors.orangeAccent, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'ĐỒ ĂN ĐÃ SẴN SÀNG',
+                style: AppTextStyles.titleSm.copyWith(
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (n.bookingId != null) ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  color: AppColors.canvas,
+                  child: Text(
+                    'MÃ ĐƠN: ${n.bookingId}',
+                    style: AppTextStyles.captionUppercase.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              Text(
+                n.body,
+                style: AppTextStyles.bodySm.copyWith(color: AppColors.ink),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '👉 Quý khách vui lòng di chuyển đến Quầy Concession (Bắp Nước) của rạp, đọc mã nhận món hoặc xuất trình thông báo này cho nhân viên để nhận đồ ăn.',
+                style: AppTextStyles.caption.copyWith(color: AppColors.muted),
+              ),
+            ],
+          ),
+          actions: [
+            AppButton.primary(
+              text: 'ĐÃ HIỂU',
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // 3. THÔNG BÁO NHẮC GIỜ CHIẾU: Mở hộp thoại nhắc nhở
+    if (n.type == 'reminder') {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.canvasElevated,
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.none),
+          title: Row(
+            children: [
+              const Icon(LucideIcons.clock,
+                  color: Colors.lightBlueAccent, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'NHẮC NHỞ GIỜ CHIẾU',
+                style: AppTextStyles.titleSm.copyWith(
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                n.title,
+                style: AppTextStyles.bodySm.copyWith(
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                n.body,
+                style: AppTextStyles.bodySm.copyWith(color: AppColors.body),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '⚠️ Quý khách lưu ý đến rạp trước ít nhất 15 phút để làm thủ tục soát vé và mang theo CCCD nếu xem phim có dán nhãn độ tuổi (T16/T18).',
+                style: AppTextStyles.caption.copyWith(color: AppColors.muted),
+              ),
+            ],
+          ),
+          actions: [
+            if (n.bookingId != null)
+              AppButton.outline(
+                text: 'MỞ VÉ ĐIỆN TỬ',
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _openTicketBottomSheet(context, n.bookingId!);
+                },
+              ),
+            AppButton.primary(
+              text: 'ĐÓNG',
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // 4. THÔNG BÁO ƯU ĐÃI & HỆ THỐNG: Mở hộp thoại thông tin khuyến mãi
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.canvasElevated,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.none),
+        title: Row(
+          children: [
+            const Icon(LucideIcons.sparkles,
+                color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                n.title,
+                style: AppTextStyles.titleSm.copyWith(
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              n.body,
+              style: AppTextStyles.bodySm
+                  .copyWith(color: AppColors.ink, height: 1.4),
+            ),
+            if (n.body.contains('DISCOUNT20') || n.body.contains('VIP50')) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.canvas,
+                  border: Border.all(color: AppColors.hairline),
+                ),
+                child: Row(
                   children: [
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: const Icon(LucideIcons.x, color: AppColors.ink),
-                        onPressed: () => Navigator.of(ctx).pop(),
+                    const Icon(LucideIcons.ticket,
+                        size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      n.body.contains('DISCOUNT20')
+                          ? 'MÃ: DISCOUNT20'
+                          : 'MÃ: VIP50',
+                      style: AppTextStyles.captionUppercase.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    TicketCard(
-                      bookingCode: b.id,
-                      movieTitle: b.movieTitle,
-                      cinemaName: b.cinemaName,
-                      roomName: b.roomName,
-                      format: b.format,
-                      showtime: b.showtimeStart,
-                      seatIds: b.seatIds,
-                      foodSummary: b.foodSummary,
-                      totalAmount: b.totalAmount,
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        final code = n.body.contains('DISCOUNT20')
+                            ? 'DISCOUNT20'
+                            : 'VIP50';
+                        Clipboard.setData(ClipboardData(text: code));
+                        Navigator.of(ctx).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Đã sao chép mã giảm giá [$code]!'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      },
+                      child: const Text('SAO CHÉP',
+                          style: TextStyle(color: Colors.white, fontSize: 11)),
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
+          ],
+        ),
+        actions: [
+          AppButton.primary(
+            text: 'ĐÃ HIỂU',
+            onPressed: () => Navigator.of(ctx).pop(),
           ),
-        );
-      }
-    }
+        ],
+      ),
+    );
   }
 
   @override

@@ -9,6 +9,10 @@ import '../../features/auth/screens/account_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/booking/screens/cinemas_screen.dart';
 import '../../features/booking/screens/my_tickets_screen.dart';
+import '../../features/management/dashboard/screens/manager_dashboard_screen.dart';
+import '../../features/management/hub/screens/management_hub_screen.dart';
+import '../../features/management/staff_tools/screens/staff_checkin_screen.dart';
+import '../../features/management/staff_tools/screens/staff_food_screen.dart';
 import '../../features/movies/screens/home_screen.dart';
 import '../../features/notifications/providers/notification_provider.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
@@ -24,6 +28,22 @@ class AppScaffoldShell extends StatefulWidget {
 class _AppScaffoldShellState extends State<AppScaffoldShell> {
   int _currentIndex = 0;
   bool _isSeeding = false;
+  String? _lastLoadedUid;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.watch<AuthProvider>();
+    final uid = auth.currentUser.uid;
+    if (uid != _lastLoadedUid) {
+      _lastLoadedUid = uid;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<NotificationProvider>().loadNotifications(uid);
+        }
+      });
+    }
+  }
 
   List<NavigationDestination> _destinationsForRole(UserRole role) {
     switch (role) {
@@ -187,6 +207,26 @@ class _AppScaffoldShellState extends State<AppScaffoldShell> {
         onGoToTickets: () => setState(() => _currentIndex = 2),
         onGoToHome: () => setState(() => _currentIndex = 0),
       );
+    }
+
+    if (user.role == UserRole.manager || user.role == UserRole.admin) {
+      switch (_currentIndex) {
+        case 0:
+          return const ManagerDashboardScreen();
+        case 1:
+          return const ManagementHubScreen();
+      }
+    }
+
+    if (user.role == UserRole.staff) {
+      switch (_currentIndex) {
+        case 0:
+          return const StaffCheckinScreen();
+        case 1:
+          return const StaffFoodScreen();
+        case 2:
+          return const ManagementHubScreen();
+      }
     }
 
     if (user.role == UserRole.guest || user.role == UserRole.customer) {
