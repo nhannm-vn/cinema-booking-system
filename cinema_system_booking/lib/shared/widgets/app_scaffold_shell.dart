@@ -24,6 +24,22 @@ class AppScaffoldShell extends StatefulWidget {
 class _AppScaffoldShellState extends State<AppScaffoldShell> {
   int _currentIndex = 0;
   bool _isSeeding = false;
+  String? _lastLoadedUid;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.watch<AuthProvider>();
+    final uid = auth.currentUser.uid;
+    if (uid != _lastLoadedUid) {
+      _lastLoadedUid = uid;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<NotificationProvider>().loadNotifications(uid);
+        }
+      });
+    }
+  }
 
   List<NavigationDestination> _destinationsForRole(UserRole role) {
     switch (role) {

@@ -50,4 +50,15 @@ class AppNotification {
       createdAt: parseDate(data['createdAt']),
     );
   }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'type': type,
+      'title': title,
+      'body': body,
+      'bookingId': bookingId,
+      'isRead': isRead,
+      'createdAt': Timestamp.fromDate(createdAt),
+    };
+  }
 }

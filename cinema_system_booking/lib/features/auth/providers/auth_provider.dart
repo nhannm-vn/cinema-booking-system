@@ -184,6 +184,10 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> sendEmailVerification() async {
+    await _repo.sendEmailVerification();
+  }
+
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();
