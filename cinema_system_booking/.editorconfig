@@ -1,0 +1,18 @@
+root = true
+
+# Áp dụng cho tất cả các file
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Riêng file Markdown giữ khoảng trắng cuối dòng (nếu cần ngắt dòng)
+[*.md]
+trim_trailing_whitespace = false
+
+# File Makefile bắt buộc dùng Tab
+[Makefile]
+indent_style = tab

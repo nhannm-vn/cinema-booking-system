@@ -1,0 +1,11 @@
+# Tự động chuẩn hóa về LF cho toàn bộ code
+* text=auto eol=lf
+
+# Khóa cứng các file nhị phân và ảnh không bị can thiệp
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.ttf binary
+*.otf binary
