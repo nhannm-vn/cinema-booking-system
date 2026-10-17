@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../shared/models/app_user.dart';
 import '../repositories/auth_repository.dart';
+import '../services/email_otp_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _repo;
@@ -101,6 +102,17 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = user;
       _isLoading = false;
       notifyListeners();
+
+      // Tự động sinh mã và gửi mã OTP 6 số tới email người dùng
+      try {
+        await EmailOtpService.instance.sendOtp(
+          email: email,
+          fullName: fullName,
+        );
+      } catch (e) {
+        debugPrint('Lỗi gửi OTP khi đăng ký: $e');
+      }
+
       return true;
     } catch (e) {
       _errorMessage = e
@@ -184,8 +196,33 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Gửi hoặc gửi lại mã OTP 6 số đến email
+  Future<String> sendEmailOtp({required String email, String? fullName}) async {
+    return await EmailOtpService.instance.sendOtp(
+      email: email,
+      fullName: fullName,
+    );
+  }
+
+  /// Xác thực mã OTP 6 số người dùng nhập
+  Future<OtpVerificationResult> verifyEmailOtp({
+    required String email,
+    required String inputOtp,
+  }) async {
+    return await EmailOtpService.instance.verifyOtp(
+      email: email,
+      inputOtp: inputOtp,
+    );
+  }
+
+  /// Gửi lại mã OTP (thay thế cho việc gửi liên kết)
   Future<void> sendEmailVerification() async {
-    await _repo.sendEmailVerification();
+    if (_currentUser.email.isNotEmpty) {
+      await EmailOtpService.instance.sendOtp(
+        email: _currentUser.email,
+        fullName: _currentUser.fullName,
+      );
+    }
   }
 
   Future<void> logout() async {

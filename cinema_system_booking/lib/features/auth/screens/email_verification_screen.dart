@@ -12,6 +12,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../notifications/models/app_notification.dart';
 import '../../notifications/providers/notification_provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/email_otp_service.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({
@@ -35,13 +36,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   bool _isVerifying = false;
   String? _errorMessage;
 
-  // Mã test mặc định để kiểm thử nhanh
+  // Mã test demo nhanh
   static const String _demoOtp = '123456';
 
   @override
   void initState() {
     super.initState();
     _startCooldownTimer();
+    _ensureInitialOtpSent();
   }
 
   @override
@@ -49,6 +51,21 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     _timer?.cancel();
     _otpController.dispose();
     super.dispose();
+  }
+
+  void _ensureInitialOtpSent() {
+    // Nếu chưa có OTP trong bộ nhớ, tự động kích hoạt gửi
+    final activeOtp = EmailOtpService.instance.getActiveOtp(widget.email);
+    if (activeOtp == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<AuthProvider>().sendEmailOtp(
+              email: widget.email,
+              fullName: widget.fullName,
+            );
+        setState(() {});
+      });
+    }
   }
 
   void _startCooldownTimer() {
@@ -69,13 +86,20 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     _startCooldownTimer();
 
     final auth = context.read<AuthProvider>();
-    await auth.sendEmailVerification();
+    final newOtp = await auth.sendEmailOtp(
+      email: widget.email,
+      fullName: widget.fullName,
+    );
 
     if (!mounted) return;
+    setState(() {
+      _errorMessage = null;
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Đã gửi lại liên kết và mã xác nhận đến ${widget.email}. Vui lòng kiểm tra hòm thư!',
+          'Đã gửi mã xác nhận OTP 6 số mới ($newOtp) đến ${widget.email}. Vui lòng kiểm tra hộp thư!',
         ),
         backgroundColor: AppColors.canvasElevated,
       ),
@@ -88,7 +112,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     setState(() => _errorMessage = null);
 
     if (code.isEmpty) {
-      setState(() => _errorMessage = 'Vui lòng nhập mã xác thực');
+      setState(() => _errorMessage = 'Vui lòng nhập mã xác thực OTP 6 số');
       return;
     }
 
@@ -97,25 +121,34 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       return;
     }
 
-    // Chấp nhận mã demo '123456' hoặc bất kỳ mã 6 số hợp lệ
     setState(() => _isVerifying = true);
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    final auth = context.read<AuthProvider>();
+    final result = await auth.verifyEmailOtp(
+      email: widget.email,
+      inputOtp: code,
+    );
 
     if (!mounted) return;
     setState(() => _isVerifying = false);
 
-    // Thêm thông báo chào mừng cá nhân hóa cho người dùng mới
-    final auth = context.read<AuthProvider>();
-    final uid = auth.currentUser.uid;
+    if (!result.isSuccess) {
+      setState(() {
+        _errorMessage =
+            result.errorMessage ?? 'Mã xác thực không hợp lệ hoặc đã hết hạn';
+      });
+      return;
+    }
 
+    // Thêm thông báo chào mừng cá nhân hóa cho người dùng mới
+    final uid = auth.currentUser.uid;
     context.read<NotificationProvider>().addNotification(
           AppNotification(
             id: 'noti_welcome_${DateTime.now().millisecondsSinceEpoch}',
             type: 'system',
             title: 'Chào mừng thành viên mới!',
             body:
-                'Chào mừng ${widget.fullName} đã kích hoạt tài khoản Cinema. Nhập mã DISCOUNT20 để được giảm 20.000đ cho đơn vé đầu tiên!',
+                'Chào mừng ${widget.fullName} đã kích hoạt tài khoản Cinema thành công. Nhập mã DISCOUNT20 để được giảm 20.000đ cho đơn vé đầu tiên!',
             isRead: false,
             createdAt: DateTime.now(),
           ),
@@ -124,7 +157,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Xác thực tài khoản thành công! Chào mừng bạn đến với Cinema.'),
+        content: Text(
+          'Xác thực tài khoản thành công! Chào mừng bạn đến với Cinema.',
+        ),
         backgroundColor: AppColors.success,
       ),
     );
@@ -134,6 +169,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final activeOtp = EmailOtpService.instance.getActiveOtp(widget.email);
+
     return Scaffold(
       backgroundColor: AppColors.canvas,
       appBar: AppBar(
@@ -155,7 +192,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               const SizedBox(height: AppSpacing.md),
 
               Text(
-                'KIỂM TRA HỘP THƯ GMAIL',
+                'NHẬP MÃ XÁC THỰC OTP',
                 style: AppTextStyles.displayLg.copyWith(
                   color: AppColors.ink,
                   fontWeight: FontWeight.w700,
@@ -163,7 +200,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Hệ thống đã gửi liên kết xác thực và mã kích hoạt tài khoản đến địa chỉ:',
+                'Hệ thống đã gửi mã xác thực 6 số kích hoạt tài khoản đến địa chỉ email:',
                 style: AppTextStyles.bodySm.copyWith(color: AppColors.body),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -177,7 +214,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(LucideIcons.mailCheck, color: AppColors.primary, size: 20),
+                    const Icon(LucideIcons.mailCheck,
+                        color: AppColors.primary, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -196,7 +234,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
               // Hướng dẫn
               Text(
-                'Mở Gmail (kiểm tra cả Hộp thư đến và mục Spam) để bấm link xác thực hoặc nhập mã kích hoạt 6 chữ số bên dưới:',
+                'Mở Gmail (kiểm tra cả Hộp thư đến và mục Spam) để lấy mã xác thực OTP 6 số và nhập vào ô bên dưới:',
                 style: AppTextStyles.bodySm.copyWith(
                   color: AppColors.muted,
                   height: 1.4,
@@ -204,14 +242,52 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               ),
               const SizedBox(height: AppSpacing.xs),
 
-              // Chip hỗ trợ kiểm thử nhanh (1-tap fill)
+              // Chip hiển thị mã OTP đã gửi (giúp kiểm thử nhanh)
+              if (activeOtp != null) ...[
+                GestureDetector(
+                  onTap: () {
+                    _otpController.text = activeOtp;
+                    setState(() {});
+                  },
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.canvasElevated,
+                      border: Border.all(color: AppColors.primary),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.mail,
+                            size: 14, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'MÃ OTP VỪA GỬI: $activeOtp (CHẠM ĐỂ TỰ ĐIỀN)',
+                            style: AppTextStyles.captionUppercase.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+
+              // Chip hỗ trợ mã demo cố định
               GestureDetector(
                 onTap: () {
                   _otpController.text = _demoOtp;
                   setState(() {});
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: AppColors.canvasElevated,
                     border: Border.all(color: AppColors.hairline),
@@ -219,12 +295,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(LucideIcons.key, size: 14, color: AppColors.primary),
+                      const Icon(LucideIcons.key,
+                          size: 14, color: AppColors.muted),
                       const SizedBox(width: 6),
                       Text(
-                        'MÃ XÁC THỰC DEMO: $_demoOtp (CHẠM ĐỂ ĐIỀN NHANH)',
+                        'MÃ XÁC THỰC TEST: $_demoOtp (CHẠM ĐỂ ĐIỀN)',
                         style: AppTextStyles.captionUppercase.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.muted,
                           fontWeight: FontWeight.w700,
                           fontSize: 10,
                         ),
@@ -240,7 +317,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               AppTextField(
                 controller: _otpController,
                 labelText: 'Mã xác nhận 6 số',
-                hintText: '123456',
+                hintText: 'Nhập 6 chữ số',
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
@@ -264,7 +341,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
               // Nút xác nhận
               AppButton.primary(
-                text: 'XÁC NHẬN TÀI KHOẢN',
+                text: 'XÁC NHẬN MÃ OTP',
                 isLoading: _isVerifying,
                 onPressed: _handleVerify,
               ),
@@ -278,12 +355,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   icon: Icon(
                     LucideIcons.refreshCw,
                     size: 14,
-                    color: _resendCooldown == 0 ? AppColors.ink : AppColors.muted,
+                    color:
+                        _resendCooldown == 0 ? AppColors.ink : AppColors.muted,
                   ),
                   label: Text(
                     _resendCooldown > 0
                         ? 'GỬI LẠI MÃ SAU (${_resendCooldown}s)'
-                        : 'GỬI LẠI LIÊN KẾT / MÃ XÁC THỰC',
+                        : 'GỬI LẠI MÃ XÁC THỰC OTP',
                     style: AppTextStyles.captionUppercase.copyWith(
                       color: _resendCooldown == 0
                           ? AppColors.ink

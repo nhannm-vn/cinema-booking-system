@@ -102,10 +102,6 @@ class AuthRepository {
 
     final uid = cred.user!.uid;
 
-    try {
-      await cred.user?.sendEmailVerification();
-    } catch (_) {}
-
     final newUser = AppUser(
       uid: uid,
       fullName: fullName.trim(),
