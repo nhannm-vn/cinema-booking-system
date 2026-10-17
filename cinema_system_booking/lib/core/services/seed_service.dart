@@ -480,6 +480,13 @@ class SeedService {
         'cinemaId': 'cn_q1'
       },
       {
+        'email': 'ql1@cinema.vn',
+        'pass': '123456',
+        'role': 'manager',
+        'name': 'Trần Quản Lý (Q1)',
+        'cinemaId': 'cn_q1'
+      },
+      {
         'email': 'manager2@cinema.vn',
         'pass': '123456',
         'role': 'manager',
@@ -488,6 +495,13 @@ class SeedService {
       },
       {
         'email': 'staff1@cinema.vn',
+        'pass': '123456',
+        'role': 'staff',
+        'name': 'Nguyễn Nhân Viên (Q1)',
+        'cinemaId': 'cn_q1'
+      },
+      {
+        'email': 'nv1@cinema.vn',
         'pass': '123456',
         'role': 'staff',
         'name': 'Nguyễn Nhân Viên (Q1)',
