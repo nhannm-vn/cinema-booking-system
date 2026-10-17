@@ -44,19 +44,64 @@ class _SelectShowtimeScreenState extends State<SelectShowtimeScreen> {
   void _onShowtimeSelected(Showtime showtime, Cinema cinema) async {
     final auth = context.read<AuthProvider>();
 
-    // 1. Kiểm tra đăng nhập (Guest -> Login -> quay lại)
+    // 1. Kiểm tra đăng nhập (Cho phép chọn Đăng nhập hoặc Tiếp tục dạng Guest)
     if (!auth.isAuthenticated) {
-      final loggedIn = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      final choice = await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: AppColors.canvasElevated,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.none),
+        builder: (ctx) => Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'BẠN CHƯA ĐĂNG NHẬP',
+                style: AppTextStyles.titleSm.copyWith(
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Đăng nhập để tích lũy điểm thưởng thành viên, quản lý vé và nhận ưu đãi giảm giá hấp dẫn.',
+                style: AppTextStyles.bodySm.copyWith(color: AppColors.body),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppButton.primary(
+                text: 'ĐĂNG NHẬP / ĐĂNG KÝ',
+                onPressed: () => Navigator.of(ctx).pop('login'),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              AppButton.outline(
+                text: 'TIẾP TỤC ĐẶT VÉ VỚI TƯ CÁCH KHÁCH (GUEST)',
+                onPressed: () => Navigator.of(ctx).pop('guest'),
+              ),
+            ],
+          ),
+        ),
       );
-      if (loggedIn != true || !mounted) return;
+      if (!mounted) return;
+
+      if (choice == 'login') {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+        if (!mounted) return;
+      } else if (choice != 'guest') {
+        return;
+      }
     }
 
     // 2. Kiểm tra xác nhận độ tuổi nếu phim T16/T18 (REQUIREMENTS 4.7)
     if (widget.movie.ageRating == 'T16' || widget.movie.ageRating == 'T18') {
       final confirmed = await _showAgeConfirmationDialog(widget.movie.ageRating);
-      if (confirmed != true || !mounted) return;
+      if (confirmed != true) return;
     }
+
+    if (!mounted) return;
 
     // 3. Khởi tạo chọn ghế và chuyển màn S06
     final bookingProvider = context.read<BookingProvider>();

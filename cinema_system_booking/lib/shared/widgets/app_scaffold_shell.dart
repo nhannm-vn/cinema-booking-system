@@ -5,9 +5,13 @@ import '../../core/services/seed_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/auth/screens/account_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/booking/screens/cinemas_screen.dart';
 import '../../features/booking/screens/my_tickets_screen.dart';
 import '../../features/movies/screens/home_screen.dart';
+import '../../features/notifications/providers/notification_provider.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 import '../../shared/models/app_user.dart';
 
 class AppScaffoldShell extends StatefulWidget {
@@ -126,9 +130,40 @@ class _AppScaffoldShellState extends State<AppScaffoldShell> {
                     .copyWith(color: AppColors.primary),
               ),
             ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(LucideIcons.bell, size: 20, color: AppColors.ink),
+          Consumer<NotificationProvider>(
+            builder: (context, noti, _) {
+              final unread = noti.unreadCount;
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    tooltip: 'Thông báo',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(LucideIcons.bell,
+                        size: 20, color: AppColors.ink),
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -147,18 +182,23 @@ class _AppScaffoldShellState extends State<AppScaffoldShell> {
 
   Widget _buildCurrentTab(
       AppUser user, List<NavigationDestination> destinations) {
+    if (destinations[_currentIndex].label == 'TÀI KHOẢN') {
+      return AccountScreen(
+        onGoToTickets: () => setState(() => _currentIndex = 2),
+        onGoToHome: () => setState(() => _currentIndex = 0),
+      );
+    }
+
     if (user.role == UserRole.guest || user.role == UserRole.customer) {
-      if (_currentIndex == 0) {
-        return const HomeScreen();
-      }
-      if (_currentIndex == 2) {
-        return MyTicketsScreen(
-          onGoToHome: () {
-            setState(() {
-              _currentIndex = 0;
-            });
-          },
-        );
+      switch (_currentIndex) {
+        case 0:
+          return const HomeScreen();
+        case 1:
+          return const CinemasScreen();
+        case 2:
+          return MyTicketsScreen(
+            onGoToHome: () => setState(() => _currentIndex = 0),
+          );
       }
     }
 

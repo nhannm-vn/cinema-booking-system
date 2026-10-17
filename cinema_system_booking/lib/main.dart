@@ -8,6 +8,7 @@ import 'features/booking/providers/booking_provider.dart';
 import 'features/booking/repositories/booking_repository.dart';
 import 'features/movies/providers/movie_provider.dart';
 import 'features/movies/repositories/movie_repository.dart';
+import 'features/notifications/providers/notification_provider.dart';
 import 'features/splash/screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'shared/widgets/app_scaffold_shell.dart';
@@ -60,6 +61,9 @@ class CinemaBookingApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) =>
               BookingProvider(repo: bookingRepository ?? BookingRepository()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(),
         ),
       ],
       child: MaterialApp(

@@ -12,9 +12,12 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/hold_timer.dart';
 import '../../../shared/widgets/skeleton_box.dart';
 import '../../movies/models/movie.dart';
+import '../../notifications/models/app_notification.dart';
+import '../../notifications/providers/notification_provider.dart';
 import '../models/cinema.dart';
 import '../models/showtime.dart';
 import '../providers/booking_provider.dart';
+import '../widgets/vnpay_sandbox_sheet.dart';
 import 'booking_success_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -96,11 +99,57 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final provider = context.read<BookingProvider>();
 
     try {
+      String? txnRef;
+
+      // Nếu chọn Cổng VNPay, hiển thị cổng thanh toán Sandbox 3 bước
+      if (_selectedPaymentMethod == 'vnpay') {
+        final result = await showModalBottomSheet<VNPaySandboxResult>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => VNPaySandboxSheet(
+            bookingCode: widget.bookingCode,
+            amount: provider.grandTotal,
+            movieTitle: widget.movie.title,
+          ),
+        );
+
+        if (result == null || !result.isSuccess) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(result?.message ?? 'Đã hủy thanh toán qua cổng VNPay'),
+              backgroundColor: AppColors.warning,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+
+        txnRef = 'VNPAY-${result.vnpTransactionNo ?? DateTime.now().millisecondsSinceEpoch}';
+      }
+
       await provider.confirmPayment(
         paymentMethod: _selectedPaymentMethod,
+        txnRef: txnRef,
       );
 
       if (!mounted) return;
+
+      // Kích hoạt thông báo hệ thống tức thì
+      context.read<NotificationProvider>().addNotification(
+            AppNotification(
+              id: 'noti_${DateTime.now().millisecondsSinceEpoch}',
+              type: 'bookingPaid',
+              title: 'Đặt vé thành công',
+              body:
+                  '${widget.movie.title} · ${widget.cinema.name} (Mã: ${widget.bookingCode})',
+              bookingId: widget.bookingCode,
+              isRead: false,
+              createdAt: DateTime.now(),
+            ),
+          );
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

@@ -142,6 +142,17 @@ class BookingProvider extends ChangeNotifier {
     loadShowtimes(movieId, date: date);
   }
 
+  Future<List<Showtime>> getShowtimesDirect({
+    required String movieId,
+    required DateTime date,
+  }) async {
+    return _repo.getShowtimes(movieId: movieId, date: date);
+  }
+
+  Future<List<Cinema>> getCinemasDirect() async {
+    return _repo.getCinemas();
+  }
+
   Future<void> initSeatSelection({
     required Showtime showtime,
     required Cinema cinema,
