@@ -1,0 +1,155 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- HELPER FUNCTIONS ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function active() {
+      return signedIn() && !me().isLocked;
+    }
+
+    function isAdmin() {
+      return active() && me().role == 'admin';
+    }
+
+    function isManager() {
+      return active() && me().role == 'manager';
+    }
+
+    function isOps() {
+      return active() && me().role in ['staff', 'manager', 'admin'];
+    }
+
+    function inCinema(cid) {
+      return isAdmin() || (isOps() && me().cinemaId == cid);
+    }
+
+    function managesCinema(cid) {
+      return isAdmin() || (isManager() && me().cinemaId == cid);
+    }
+
+    function changedOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    // ---------- USERS ----------
+    match /users/{uid} {
+      allow read: if signedIn() && (
+        request.auth.uid == uid ||
+        isAdmin() ||
+        (isManager() && resource.data.cinemaId == me().cinemaId)
+      );
+
+      allow create: if signedIn() && (
+        (request.auth.uid == uid && request.resource.data.role == 'customer' && request.resource.data.isLocked == false) ||
+        isAdmin() ||
+        (isManager() && request.resource.data.role == 'staff' && request.resource.data.cinemaId == me().cinemaId)
+      );
+
+      allow update: if signedIn() && (
+        (request.auth.uid == uid && changedOnly(['fullName', 'phone'])) ||
+        isAdmin() ||
+        (isManager() && resource.data.role == 'staff' && resource.data.cinemaId == me().cinemaId && changedOnly(['isLocked']))
+      );
+
+      match /notifications/{id} {
+        allow read, update, delete: if request.auth.uid == uid;
+        allow create: if signedIn();
+      }
+    }
+
+    // ---------- DANH MỤC CÔNG KHAI ----------
+    match /movies/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /cinemas/{cid} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /rooms/{rid} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /foods/{fid} {
+        allow read: if true;
+        allow write: if managesCinema(cid);
+      }
+    }
+
+    match /vouchers/{code} {
+      allow get: if signedIn();
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin() || (signedIn() && changedOnly(['usedCount']) && request.resource.data.usedCount == resource.data.usedCount + 1);
+    }
+
+    // ---------- SUẤT CHIẾU & GHẾ ----------
+    match /showtimes/{sid} {
+      allow read: if true;
+      allow create: if managesCinema(request.resource.data.cinemaId);
+      allow update: if managesCinema(resource.data.cinemaId) || (signedIn() && changedOnly(['soldSeats']));
+      allow delete: if managesCinema(resource.data.cinemaId);
+
+      match /seats/{seatId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.holderId == request.auth.uid;
+        allow update: if signedIn() && request.resource.data.holderId == request.auth.uid && resource.data.status == 'holding' && (resource.data.holderId == request.auth.uid || resource.data.holdUntil < request.time);
+        allow delete: if signedIn() && (resource.data.holderId == request.auth.uid || isOps());
+      }
+    }
+
+    // ---------- BOOKINGS ----------
+    match /bookings/{code} {
+      allow get: if signedIn() && (resource.data.userId == request.auth.uid || isOps());
+      allow list: if signedIn() && (resource.data.userId == request.auth.uid || inCinema(resource.data.cinemaId));
+      allow create: if signedIn() && (
+        (request.resource.data.userId == request.auth.uid && request.resource.data.channel == 'online') ||
+        (isOps() && request.resource.data.channel == 'counter' && request.resource.data.soldBy == request.auth.uid && inCinema(request.resource.data.cinemaId))
+      );
+      allow update: if signedIn() && (
+        (resource.data.userId == request.auth.uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'userId', 'cinemaId', 'channel', 'seats', 'foods', 'priceSnapshot',
+          'checkedInBy', 'checkedInAt', 'foodDeliveredBy', 'foodDeliveredAt'
+        ])) ||
+        inCinema(resource.data.cinemaId)
+      );
+
+      match /payments/{txnRef} {
+        allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+        allow read, update: if signedIn() && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // ---------- AUDIT LOGS & CONVERSATIONS ----------
+    match /auditLogs/{id} {
+      allow create: if isOps() && request.resource.data.actorId == request.auth.uid;
+      allow read: if isAdmin();
+    }
+
+    match /conversations/{cid} {
+      allow read, update: if signedIn() && (resource.data.userId == request.auth.uid || inCinema(resource.data.cinemaId));
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+
+      match /messages/{mid} {
+        allow read, create: if signedIn() && (
+          get(/databases/$(database)/documents/conversations/$(cid)).data.userId == request.auth.uid ||
+          inCinema(get(/databases/$(database)/documents/conversations/$(cid)).data.cinemaId)
+        );
+      }
+    }
+  }
+}

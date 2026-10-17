@@ -1,0 +1,25 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "cinemabookingsystem-fcdb3",
+          "appId": "1:1049050666616:android:c84d4139550a35ba903f8d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "cinemabookingsystem-fcdb3",
+          "configurations": {
+            "android": "1:1049050666616:android:c84d4139550a35ba903f8d",
+            "web": "1:1049050666616:web:ca2cabb3517d44aa903f8d"
+          }
+        }
+      }
+    }
+  }
+}
