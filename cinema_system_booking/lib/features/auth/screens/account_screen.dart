@@ -14,6 +14,7 @@ import '../providers/auth_provider.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import 'security_settings_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({
@@ -254,6 +255,19 @@ class AccountScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                  );
+                },
+              ),
+              _MenuItemTile(
+                icon: LucideIcons.shieldCheck,
+                title: 'BẢO MẬT & ĐỔI MẬT KHẨU',
+                subtitle: 'Đổi mật khẩu, khôi phục qua email, bảo vệ tài khoản',
+                trailingBadge: 'AN TOÀN',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const SecuritySettingsScreen(),
+                    ),
                   );
                 },
               ),
