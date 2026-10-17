@@ -106,7 +106,8 @@ class SeedService {
         'category': 'combo',
         'price': 79000,
         'desc': '1 bắp ngọt 60oz + 1 nước ngọt 32oz',
-        'img': 'https://images.unsplash.com/photo-1585647347384-2593bc35786b',
+        'img':
+            'https://images.unsplash.com/photo-1585647347384-2593bc35786b?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -114,7 +115,8 @@ class SeedService {
         'category': 'combo',
         'price': 119000,
         'desc': '1 bắp lớn + 2 nước ngọt 32oz',
-        'img': 'https://images.unsplash.com/photo-1585647347384-2593bc35786b',
+        'img':
+            'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -122,15 +124,17 @@ class SeedService {
         'category': 'combo',
         'price': 169000,
         'desc': '2 bắp ngọt + 4 nước ngọt + 1 snack khoai tây',
-        'img': 'https://images.unsplash.com/photo-1585647347384-2593bc35786b',
+        'img':
+            'https://images.unsplash.com/photo-1572177812156-58036aae439c?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
         'name': 'Bắp Rang Phô Mai',
         'category': 'popcorn',
         'price': 49000,
-        'desc': 'Bắp rang bơ lắc bột phô Mai béo ngậy',
-        'img': 'https://images.unsplash.com/photo-1578849278619-e73505e9610f',
+        'desc': 'Bắp rang bơ lắc bột phô mai béo ngậy',
+        'img':
+            'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -138,7 +142,8 @@ class SeedService {
         'category': 'popcorn',
         'price': 49000,
         'desc': 'Bắp thơm giòn phủ sốt caramel đậm vị',
-        'img': 'https://images.unsplash.com/photo-1578849278619-e73505e9610f',
+        'img':
+            'https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -146,7 +151,8 @@ class SeedService {
         'category': 'drink',
         'price': 32000,
         'desc': 'Nước ngọt có gas không calo mát lạnh',
-        'img': 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97',
+        'img':
+            'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -154,7 +160,8 @@ class SeedService {
         'category': 'drink',
         'price': 39000,
         'desc': 'Trà trái cây tươi thanh mát giải nhiệt',
-        'img': 'https://images.unsplash.com/photo-1556881286-fc6915169721',
+        'img':
+            'https://images.unsplash.com/photo-1556881286-fc6915169721?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -162,7 +169,8 @@ class SeedService {
         'category': 'drink',
         'price': 20000,
         'desc': 'Nước khoáng tinh khiết đóng chai',
-        'img': 'https://images.unsplash.com/photo-1523362628745-0c100150b504',
+        'img':
+            'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -170,7 +178,8 @@ class SeedService {
         'category': 'snack',
         'price': 25000,
         'desc': 'Khoai tây sấy giòn tan vị tảo biển',
-        'img': 'https://images.unsplash.com/photo-1566478989037-eec170784d0b',
+        'img':
+            'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&auto=format&fit=crop&q=80',
         'avail': true
       },
       {
@@ -178,7 +187,8 @@ class SeedService {
         'category': 'snack',
         'price': 35000,
         'desc': 'Xúc xích Đức nướng nóng giòn kẹp phô mai',
-        'img': 'https://images.unsplash.com/photo-1627054234584-386b03943343',
+        'img':
+            'https://images.unsplash.com/photo-1627054234584-386b03943343?w=400&auto=format&fit=crop&q=80',
         'avail': false
       },
     ];

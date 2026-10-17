@@ -113,6 +113,37 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile({
+    required String fullName,
+    required String phone,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (_currentUser.uid.isNotEmpty && _currentUser.role != UserRole.guest) {
+        await _repo.updateProfile(
+          uid: _currentUser.uid,
+          fullName: fullName,
+          phone: phone,
+        );
+      }
+      _currentUser = _currentUser.copyWith(
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();

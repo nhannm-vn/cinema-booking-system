@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:cinema_booking_app/features/booking/models/food_item.dart';
 import 'package:cinema_booking_app/features/booking/models/pricing.dart';
 import 'package:cinema_booking_app/features/booking/models/seat_model.dart';
 import 'package:cinema_booking_app/features/booking/providers/booking_provider.dart';
@@ -10,7 +11,6 @@ void main() {
     const pricing = PricingRules.defaultRules;
 
     test('Tính giá ghế thường 2D ngày thường', () {
-      // Thứ Ba (weekday = 2), 14:00 (không phải giờ vàng)
       final showtime = DateTime(2026, 10, 20, 14, 0);
       final price = pricing.calculateSeatPrice(
         format: '2D',
@@ -22,8 +22,6 @@ void main() {
     });
 
     test('Tính giá ghế VIP 3D cuối tuần giờ vàng', () {
-      // Thứ Bảy (weekday = 6), 19:30 (giờ vàng 18h-22h)
-      // 100k (3D) + 20k (VIP) + 10k (Cuối tuần) + 10k (Giờ vàng) = 140k
       final showtime = DateTime(2026, 10, 24, 19, 30);
       final price = pricing.calculateSeatPrice(
         format: '3D',
@@ -35,7 +33,6 @@ void main() {
     });
 
     test('Tính giá ghế Đôi IMAX ngày thường', () {
-      // 2 * 120k + 20k (couple) = 260k
       final showtime = DateTime(2026, 10, 21, 14, 0);
       final price = pricing.calculateSeatPrice(
         format: 'IMAX',
@@ -62,7 +59,6 @@ void main() {
       expect(provider.selectedSeats.length, 1);
       expect(provider.selectedSeats.first.id, 'A1');
 
-      // Chạm lại lần 2 để bỏ chọn
       final removed = provider.toggleSeatSelection('A1', SeatType.normal);
       expect(removed, isTrue);
       expect(provider.selectedSeats.isEmpty, isTrue);
@@ -75,10 +71,74 @@ void main() {
       }
       expect(provider.selectedSeats.length, 8);
 
-      // Thử chọn ghế thứ 9
       final ninthSuccess = provider.toggleSeatSelection('A9', SeatType.normal);
       expect(ninthSuccess, isFalse);
       expect(provider.selectedSeats.length, 8);
+    });
+
+    test('Sinh mã booking 8 ký tự hợp lệ và không chứa ký tự dễ nhầm lẫn (O, I)', () {
+      for (int i = 0; i < 20; i++) {
+        final code = provider.generateBookingCode();
+        expect(code.length, 8);
+        expect(code.contains('O'), isFalse);
+        expect(code.contains('I'), isFalse);
+      }
+    });
+
+    test('Tăng/giảm số lượng món ăn và tính tổng tiền đồ ăn chính xác', () {
+      const food1 = FoodItem(
+        id: 'f1',
+        cinemaId: 'c1',
+        name: 'Combo Solo',
+        category: 'combo',
+        price: 79000,
+        description: '',
+        imageUrl: '',
+        isAvailable: true,
+      );
+
+      const food2 = FoodItem(
+        id: 'f2',
+        cinemaId: 'c1',
+        name: 'Bắp Caramel',
+        category: 'popcorn',
+        price: 49000,
+        description: '',
+        imageUrl: '',
+        isAvailable: true,
+      );
+
+      expect(provider.foodTotal, 0);
+
+      // Thêm 2 Combo Solo và 1 Bắp Caramel
+      provider.incrementFood(food1);
+      provider.incrementFood(food1);
+      provider.incrementFood(food2);
+
+      expect(provider.getFoodQuantity('f1'), 2);
+      expect(provider.getFoodQuantity('f2'), 1);
+      expect(provider.foodTotal, 2 * 79000 + 49000); // 207000
+
+      // Giảm 1 Combo Solo
+      provider.decrementFood(food1);
+      expect(provider.getFoodQuantity('f1'), 1);
+      expect(provider.foodTotal, 79000 + 49000); // 128000
+    });
+
+    test('Áp dụng mã giảm giá Voucher chính xác', () {
+      // Mã sai
+      final wrong = provider.applyVoucher('SAI_MA');
+      expect(wrong, isFalse);
+      expect(provider.discount, 0);
+
+      // Mã đúng DISCOUNT20
+      final valid = provider.applyVoucher('DISCOUNT20');
+      expect(valid, isTrue);
+      expect(provider.discount, 20000);
+
+      // Xóa voucher
+      provider.removeVoucher();
+      expect(provider.discount, 0);
     });
   });
 
@@ -105,6 +165,42 @@ void main() {
       );
 
       expect(expiredSeat.isAvailableFor('uid_me'), isTrue);
+    });
+  });
+
+  group('Kiểm thử Quản lý vé của tôi (S10 My Tickets)', () {
+    late BookingProvider provider;
+
+    setUp(() {
+      provider = BookingProvider(repo: BookingRepository());
+    });
+
+    test('Tải danh sách vé và phân loại chính xác 3 tab', () async {
+      await provider.loadUserBookings('user_customer_1');
+
+      expect(provider.userBookings.isNotEmpty, isTrue);
+      expect(provider.upcomingBookings.isNotEmpty, isTrue);
+      expect(provider.usedBookings.isNotEmpty, isTrue);
+      expect(provider.cancelledBookings.isNotEmpty, isTrue);
+
+      final upcoming = provider.upcomingBookings.first;
+      expect(upcoming.status, 'paid');
+      expect(upcoming.isUpcoming, isTrue);
+    });
+
+    test('Hủy vé thành công và chuyển vào danh sách vé đã hủy', () async {
+      await provider.loadUserBookings('user_customer_1');
+      final initialUpcomingCount = provider.upcomingBookings.length;
+      final targetTicket = provider.upcomingBookings.first;
+
+      final cancelled =
+          await provider.cancelBooking(targetTicket.id, 'user_customer_1');
+      expect(cancelled, isTrue);
+
+      expect(provider.upcomingBookings.length, initialUpcomingCount - 1);
+      final hasCancelled =
+          provider.cancelledBookings.any((b) => b.id == targetTicket.id);
+      expect(hasCancelled, isTrue);
     });
   });
 }

@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_logo.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../providers/auth_provider.dart';
 
@@ -100,10 +101,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: AppSpacing.sm),
+              const Center(child: AppLogo(size: 56, showTagline: false)),
               const SizedBox(height: AppSpacing.md),
               Text(
                 'TẠO TÀI KHOẢN',
-                style: AppTextStyles.displayXl.copyWith(color: AppColors.ink),
+                style: AppTextStyles.displayLg.copyWith(
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Đăng ký thành viên để tích điểm và nhận vô vàn ưu đãi',
+                style: AppTextStyles.bodySm.copyWith(color: AppColors.body),
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(

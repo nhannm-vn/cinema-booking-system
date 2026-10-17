@@ -8,6 +8,8 @@ import 'features/booking/providers/booking_provider.dart';
 import 'features/booking/repositories/booking_repository.dart';
 import 'features/movies/providers/movie_provider.dart';
 import 'features/movies/repositories/movie_repository.dart';
+import 'features/notifications/providers/notification_provider.dart';
+import 'features/splash/screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'shared/widgets/app_scaffold_shell.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -37,11 +39,13 @@ class CinemaBookingApp extends StatelessWidget {
     this.authRepository,
     this.movieRepository,
     this.bookingRepository,
+    this.showSplash = true,
   });
 
   final AuthRepository? authRepository;
   final MovieRepository? movieRepository;
   final BookingRepository? bookingRepository;
+  final bool showSplash;
 
   @override
   Widget build(BuildContext context) {
@@ -51,10 +55,15 @@ class CinemaBookingApp extends StatelessWidget {
           create: (_) => AuthProvider(repo: authRepository ?? AuthRepository()),
         ),
         ChangeNotifierProvider(
-          create: (_) => MovieProvider(repo: movieRepository ?? MovieRepository()),
+          create: (_) =>
+              MovieProvider(repo: movieRepository ?? MovieRepository()),
         ),
         ChangeNotifierProvider(
-          create: (_) => BookingProvider(repo: bookingRepository ?? BookingRepository()),
+          create: (_) =>
+              BookingProvider(repo: bookingRepository ?? BookingRepository()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(),
         ),
       ],
       child: MaterialApp(
@@ -62,7 +71,7 @@ class CinemaBookingApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
         themeMode: ThemeMode.dark,
-        home: const AppScaffoldShell(),
+        home: showSplash ? const SplashScreen() : const AppScaffoldShell(),
       ),
     );
   }
