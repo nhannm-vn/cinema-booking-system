@@ -71,6 +71,81 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showForgotPasswordDialog() {
+    final resetEmailController =
+        TextEditingController(text: _emailController.text.trim());
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.canvasElevated,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.none),
+        title: Text(
+          'KHÔI PHỤC MẬT KHẨU',
+          style: AppTextStyles.titleSm.copyWith(
+            color: AppColors.ink,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nhập email tài khoản của bạn để nhận liên kết thiết lập lại mật khẩu an toàn:',
+              style: AppTextStyles.bodySm.copyWith(color: AppColors.body),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppTextField(
+              controller: resetEmailController,
+              labelText: 'Email của bạn',
+              hintText: 'vidu@email.com',
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: const Icon(LucideIcons.mail, size: 18),
+            ),
+          ],
+        ),
+        actions: [
+          AppButton.outline(
+            text: 'HỦY',
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          AppButton.primary(
+            text: 'GỬI LIÊN KẾT',
+            onPressed: () async {
+              final email = resetEmailController.text.trim();
+              if (email.isEmpty || !email.contains('@')) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Vui lòng nhập email hợp lệ'),
+                    backgroundColor: AppColors.warning,
+                  ),
+                );
+                return;
+              }
+              Navigator.of(ctx).pop();
+              final auth = context.read<AuthProvider>();
+              final ok = await auth.sendPasswordReset(email);
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    ok
+                        ? 'Đã gửi liên kết khôi phục mật khẩu đến $email. Vui lòng kiểm tra hộp thư!'
+                        : (auth.errorMessage ?? 'Không thể gửi email lúc này'),
+                  ),
+                  backgroundColor:
+                      ok ? AppColors.success : AppColors.canvasElevated,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<AuthProvider>().isLoading;
@@ -174,7 +249,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: 4),
+
+                  // LINK QUÊN MẬT KHẨU
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _showForgotPasswordDialog,
+                      child: Text(
+                        'QUÊN MẬT KHẨU?',
+                        style: AppTextStyles.captionUppercase.copyWith(
+                          color: AppColors.muted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
 
                   // NÚT ĐĂNG NHẬP
                   AppButton.primary(

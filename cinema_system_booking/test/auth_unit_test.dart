@@ -33,5 +33,19 @@ void main() {
       expect(lockedUser.isLocked, isTrue);
       expect(lockedUser.fullName, 'Nguyễn Văn A');
     });
+
+    test('Quy tắc bảo mật định dạng SĐT (10 số) và Mật khẩu (>= 6 ký tự)', () {
+      final phoneRegex = RegExp(r'^0[0-9]{9}$');
+      expect(phoneRegex.hasMatch('0901234567'), isTrue);
+      expect(phoneRegex.hasMatch('090123456'), isFalse); // 9 số
+      expect(phoneRegex.hasMatch('09012345678'), isFalse); // 11 số
+      expect(phoneRegex.hasMatch('1901234567'), isFalse); // Không bắt đầu bằng 0
+
+      // Mật khẩu >= 6 ký tự
+      bool isValidPassword(String pass) => pass.trim().length >= 6;
+      expect(isValidPassword('12345'), isFalse);
+      expect(isValidPassword('123456'), isTrue);
+      expect(isValidPassword('Cinema@2026'), isTrue);
+    });
   });
 }

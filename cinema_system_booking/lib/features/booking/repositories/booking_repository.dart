@@ -480,6 +480,28 @@ class BookingRepository {
       imageUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c',
       isActive: true,
     ),
+    const Cinema(
+      id: 'cn_bt',
+      name: 'Cinema Landmark 81',
+      address: 'Tầng B1 Vincom Landmark 81, 720A Điện Biên Phủ, Bình Thạnh, TP.HCM',
+      phone: '19001003',
+      openingHours: '09:00–23:30',
+      latitude: 10.795100,
+      longitude: 106.721800,
+      imageUrl: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e',
+      isActive: true,
+    ),
+    const Cinema(
+      id: 'cn_q7',
+      name: 'Cinema Crescent Mall',
+      address: 'Tầng 5 Crescent Mall, 101 Tôn Dật Tiên, Tân Phú, Quận 7, TP.HCM',
+      phone: '19001004',
+      openingHours: '09:00–23:00',
+      latitude: 10.729300,
+      longitude: 106.719600,
+      imageUrl: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26',
+      isActive: true,
+    ),
   ];
 
   static const List<String> standardLayout = [
@@ -642,6 +664,12 @@ class BookingRepository {
       {'h': 14, 'm': 0, 'f': '3D', 'r': 'room_01', 'c': 'cn_tb'},
       {'h': 18, 'm': 30, 'f': '2D', 'r': 'room_01', 'c': 'cn_tb'},
       {'h': 20, 'm': 45, 'f': '3D', 'r': 'room_01', 'c': 'cn_tb'},
+      {'h': 10, 'm': 30, 'f': 'IMAX', 'r': 'room_02', 'c': 'cn_bt'},
+      {'h': 15, 'm': 0, 'f': 'IMAX', 'r': 'room_02', 'c': 'cn_bt'},
+      {'h': 19, 'm': 45, 'f': 'IMAX', 'r': 'room_02', 'c': 'cn_bt'},
+      {'h': 12, 'm': 15, 'f': '2D', 'r': 'room_01', 'c': 'cn_q7'},
+      {'h': 17, 'm': 30, 'f': '2D', 'r': 'room_01', 'c': 'cn_q7'},
+      {'h': 21, 'm': 0, 'f': '3D', 'r': 'room_01', 'c': 'cn_q7'},
     ];
 
     for (int i = 0; i < hours.length; i++) {
