@@ -18,6 +18,7 @@ import '../models/room.dart';
 import '../models/showtime.dart';
 import '../providers/booking_provider.dart';
 import '../repositories/booking_repository.dart';
+import 'select_food_screen.dart';
 
 class SelectSeatScreen extends StatefulWidget {
   const SelectSeatScreen({
@@ -72,16 +73,16 @@ class _SelectSeatScreenState extends State<SelectSeatScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Giữ ghế thành công! Mã đơn: $bookingCode (Hạn giữ 5 phút)',
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => SelectFoodScreen(
+            movie: widget.movie,
+            cinema: widget.cinema,
+            showtime: widget.showtime,
+            bookingCode: bookingCode,
           ),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
         ),
       );
-      // S07 Food selection will be hooked next
     } catch (e) {
       if (!mounted) return;
       final msg = e is SeatTakenException
