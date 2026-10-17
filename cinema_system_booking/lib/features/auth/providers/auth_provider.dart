@@ -21,6 +21,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser.role != UserRole.guest;
   String? get errorMessage => _errorMessage;
+  AuthRepository get repo => _repo;
 
   UserRole get currentRole => _currentUser.role;
   String? get currentCinemaId => _currentUser.cinemaId;

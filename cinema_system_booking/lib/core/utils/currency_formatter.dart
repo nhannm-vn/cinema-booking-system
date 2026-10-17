@@ -22,4 +22,6 @@ abstract final class CurrencyFormatter {
       return '${buffer.toString()} đ';
     }
   }
+
+  static String formatVnd(int amount) => format(amount);
 }
