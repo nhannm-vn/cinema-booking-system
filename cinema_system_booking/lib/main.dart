@@ -9,6 +9,7 @@ import 'features/booking/repositories/booking_repository.dart';
 import 'features/movies/providers/movie_provider.dart';
 import 'features/movies/repositories/movie_repository.dart';
 import 'features/notifications/providers/notification_provider.dart';
+import 'features/notifications/services/local_notification_service.dart';
 import 'features/splash/screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'shared/widgets/app_scaffold_shell.dart';
@@ -28,6 +29,12 @@ void main() async {
     );
   } catch (e) {
     debugPrint('Firebase initialization notice: $e');
+  }
+
+  try {
+    await LocalNotificationService.instance.initialize();
+  } catch (e) {
+    debugPrint('LocalNotificationService initialization notice: $e');
   }
 
   runApp(const CinemaBookingApp());
