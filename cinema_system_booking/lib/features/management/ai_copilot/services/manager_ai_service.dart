@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/manager_ai_message.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ManagerAiService {
   ManagerAiService({
@@ -9,8 +10,8 @@ class ManagerAiService {
   })  : _apiKey = apiKey ?? defaultApiKey,
         _client = client ?? http.Client();
 
-  static const String defaultApiKey =
-      'AQ.Ab8RN6J4jbvrSZ3H4TQf9DsHjTRgkm7wnMZ6yByGudafEz8l_g';
+// Thay thế chuỗi key cũ bằng giá trị đọc từ môi trường khi build:
+  static String get defaultApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
   static const List<String> availableModels = [
     'gemini-3.8-flash',
@@ -118,11 +119,13 @@ YÊU CẦU TRẢ LỜI:
       },
     });
 
-    final response = await _client.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: requestBody,
-    ).timeout(const Duration(seconds: 20));
+    final response = await _client
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: requestBody,
+        )
+        .timeout(const Duration(seconds: 20));
 
     if (response.statusCode != 200) {
       String errorMessage = 'Lỗi máy chủ AI (${response.statusCode})';

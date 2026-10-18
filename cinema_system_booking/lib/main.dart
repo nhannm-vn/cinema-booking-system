@@ -17,9 +17,11 @@ import 'features/splash/screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'shared/widgets/app_scaffold_shell.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   try {
     await initializeDateFormatting('vi', null);
   } catch (e) {

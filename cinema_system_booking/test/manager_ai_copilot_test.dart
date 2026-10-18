@@ -16,11 +16,8 @@ import 'package:cinema_booking_app/shared/models/app_user.dart';
 void main() {
   group('Kiểm thử Trợ lý AI Quản lý Rạp (CineManager AI Copilot - Gemini)', () {
     test('Khởi tạo Service và kiểm tra API Key mặc định của Gemini', () {
-      final service = ManagerAiService();
-      expect(
-        service.currentApiKey,
-        'AQ.Ab8RN6J4jbvrSZ3H4TQf9DsHjTRgkm7wnMZ6yByGudafEz8l_g',
-      );
+      final service = ManagerAiService(apiKey: 'MOCK_DEFAULT_KEY');
+      expect(service.currentApiKey, 'MOCK_DEFAULT_KEY');
       expect(ManagerAiService.availableModels, contains('gemini-3.8-flash'));
 
       service.updateApiKey('NEW_TEST_KEY_123');
@@ -101,7 +98,8 @@ void main() {
       expect(promptText, contains('Combo Bắp Nước Solo'));
     });
 
-    test('ManagerAiProvider khởi tạo tin nhắn chào mừng và các template mẫu', () {
+    test('ManagerAiProvider khởi tạo tin nhắn chào mừng và các template mẫu',
+        () {
       final provider = ManagerAiProvider();
 
       expect(provider.messages.isNotEmpty, isTrue);
@@ -132,7 +130,8 @@ void main() {
   });
 
   group('Kiểm thử Giao diện Màn hình Trợ lý AI (ManagerAiScreen)', () {
-    testWidgets('Hiển thị đầy đủ AppBar, Badge Gemini, Prompt chips & Input bar',
+    testWidgets(
+        'Hiển thị đầy đủ AppBar, Badge Gemini, Prompt chips & Input bar',
         (tester) async {
       await tester.pumpWidget(
         MultiProvider(
