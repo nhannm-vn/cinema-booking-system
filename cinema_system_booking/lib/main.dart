@@ -8,6 +8,7 @@ import 'features/booking/providers/booking_provider.dart';
 import 'features/booking/repositories/booking_repository.dart';
 import 'features/movies/providers/movie_provider.dart';
 import 'features/movies/repositories/movie_repository.dart';
+import 'features/management/ai_copilot/providers/manager_ai_provider.dart';
 import 'features/management/providers/management_provider.dart';
 import 'features/management/repositories/management_repository.dart';
 import 'features/notifications/providers/notification_provider.dart';
@@ -80,6 +81,9 @@ class CinemaBookingApp extends StatelessWidget {
           create: (_) => ManagementProvider(
             repo: managementRepository ?? ManagementRepository(),
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ManagerAiProvider(),
         ),
       ],
       child: MaterialApp(

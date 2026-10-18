@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import '../../notifications/services/local_notification_service.dart';
 
 class OtpVerificationResult {
@@ -222,12 +222,7 @@ class EmailOtpService {
     if (webhook == null || webhook.isEmpty) return;
 
     try {
-      final client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 8);
       final uri = Uri.parse(webhook);
-      final request = await client.postUrl(uri);
-      request.headers.set('Content-Type', 'application/json; charset=utf-8');
-
       final body = jsonEncode({
         'action': 'send_otp',
         'email': email,
@@ -236,8 +231,14 @@ class EmailOtpService {
         'appName': 'Cinema Booking App',
       });
 
-      request.add(utf8.encode(body));
-      final response = await request.close();
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=utf-8'},
+            body: body,
+          )
+          .timeout(const Duration(seconds: 8));
+
       if (response.statusCode == 200 || response.statusCode == 302) {
         debugPrint(
             '✅ Gửi email OTP thực tế qua Google Apps Script thành công (Status: ${response.statusCode})!');

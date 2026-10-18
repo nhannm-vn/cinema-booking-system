@@ -16,6 +16,7 @@ import '../../../auth/providers/auth_provider.dart';
 import '../../../booking/models/showtime.dart';
 import '../../../movies/models/movie.dart';
 import '../../../movies/providers/movie_provider.dart';
+import '../../ai_copilot/screens/manager_ai_screen.dart';
 import '../../orders/screens/manager_bookings_screen.dart';
 import '../../providers/management_provider.dart';
 import '../../showtimes/screens/add_edit_showtime_screen.dart';
@@ -94,6 +95,24 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.primary,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        icon: const Icon(LucideIcons.bot, color: AppColors.onPrimary, size: 18),
+        label: Text(
+          'AI COPILOT',
+          style: AppTextStyles.captionUppercase.copyWith(
+            color: AppColors.onPrimary,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.1,
+          ),
+        ),
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ManagerAiScreen()),
+          );
+        },
+      ),
       body: RefreshIndicator(
         color: AppColors.primary,
         backgroundColor: AppColors.canvasElevated,
@@ -114,6 +133,11 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
 
               // 2. QUICK ACTIONS BAR
               _buildQuickActions(cid),
+
+              const SizedBox(height: AppSpacing.xs),
+
+              // 2.1 AI COPILOT HERO BANNER
+              _buildAiCopilotBanner(),
 
               const SizedBox(height: AppSpacing.xs),
 
@@ -138,6 +162,88 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> {
 
               const SizedBox(height: AppSpacing.md),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiCopilotBanner() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.canvasElevated,
+        border: Border(
+          left: BorderSide(color: AppColors.primary, width: 3),
+          top: BorderSide(color: AppColors.hairline, width: 1),
+          right: BorderSide(color: AppColors.hairline, width: 1),
+          bottom: BorderSide(color: AppColors.hairline, width: 1),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ManagerAiScreen()),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xs),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  color: AppColors.canvas,
+                  child: const Icon(
+                    LucideIcons.bot,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'CINE-COPILOT AI TRỢ LÝ',
+                            style: AppTextStyles.titleSm.copyWith(
+                              color: AppColors.ink,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const AppBadge(
+                            text: 'GEMINI 3.8',
+                            variant: AppBadgeVariant.primary,
+                            fontSize: 8,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Phân công ca trực cho staff, checklist dọn rạp & xử lý sự cố',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.body,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  LucideIcons.chevronRight,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
           ),
         ),
       ),
