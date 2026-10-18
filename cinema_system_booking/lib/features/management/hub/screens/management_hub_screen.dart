@@ -7,6 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_badge.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../ai_copilot/screens/manager_ai_screen.dart';
 import '../../chat/screens/manager_conversations_screen.dart';
 import '../../employees/screens/manager_staff_screen.dart';
 import '../../foods/screens/manager_foods_screen.dart';
@@ -213,6 +214,20 @@ class _ManagementHubScreenState extends State<ManagementHubScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.xxs),
+
+            _buildNavTile(
+              icon: LucideIcons.bot,
+              title: 'TRỢ LÝ AI COPILOT (GEMINI)',
+              subtitle: 'Phân việc cho nhân viên, checklist dọn rạp & SOP xử lý sự cố',
+              trailingBadge: 'AI 24/7',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ManagerAiScreen(),
+                  ),
+                );
+              },
+            ),
 
             _buildNavTile(
               icon: LucideIcons.calendarClock,
