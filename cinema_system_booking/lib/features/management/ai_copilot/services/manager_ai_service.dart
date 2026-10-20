@@ -10,13 +10,13 @@ class ManagerAiService {
   })  : _apiKey = apiKey ?? defaultApiKey,
         _client = client ?? http.Client();
 
-// Thay thế chuỗi key cũ bằng giá trị đọc từ môi trường khi build:
+  // Đọc key từ môi trường:
   static String get defaultApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
+  // Danh sách các model hoàn toàn FREE, phản hồi nhanh & ổn định nhất:
   static const List<String> availableModels = [
-    'gemini-3.8-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash'
   ];
 
   String _apiKey;
@@ -54,7 +54,7 @@ YÊU CẦU TRẢ LỜI:
     // Build payload messages
     final contents = <Map<String, dynamic>>[];
 
-    // Add recent history (last 6 messages)
+    // Lấy 6 tin nhắn gần nhất
     final recentHistory = conversationHistory.length > 6
         ? conversationHistory.sublist(conversationHistory.length - 6)
         : conversationHistory;
@@ -69,7 +69,7 @@ YÊU CẦU TRẢ LỜI:
       });
     }
 
-    // Add current user prompt
+    // Thêm prompt hiện tại của user
     contents.add({
       'role': 'user',
       'parts': [
@@ -77,7 +77,7 @@ YÊU CẦU TRẢ LỜI:
       ],
     });
 
-    // Try primary model then fallback models
+    // Thử model chính, nếu lỗi sẽ tự động thử model tiếp theo
     Exception? lastException;
     for (final modelName in availableModels) {
       try {
@@ -119,13 +119,14 @@ YÊU CẦU TRẢ LỜI:
       },
     });
 
+    // Tăng timeout lên 40s để tránh bị gián đoạn khi mạng chậm
     final response = await _client
         .post(
           uri,
           headers: {'Content-Type': 'application/json'},
           body: requestBody,
         )
-        .timeout(const Duration(seconds: 20));
+        .timeout(const Duration(seconds: 40));
 
     if (response.statusCode != 200) {
       String errorMessage = 'Lỗi máy chủ AI (${response.statusCode})';
