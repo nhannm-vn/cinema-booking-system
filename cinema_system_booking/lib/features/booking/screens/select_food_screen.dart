@@ -17,6 +17,7 @@ import '../models/cinema.dart';
 import '../models/food_item.dart';
 import '../models/showtime.dart';
 import '../providers/booking_provider.dart';
+import '../../management/staff_tools/screens/staff_counter_payment_screen.dart';
 import 'payment_screen.dart';
 
 class SelectFoodScreen extends StatefulWidget {
@@ -26,12 +27,14 @@ class SelectFoodScreen extends StatefulWidget {
     required this.cinema,
     required this.showtime,
     required this.bookingCode,
+    this.isCounter = false,
   });
 
   final Movie movie;
   final Cinema cinema;
   final Showtime showtime;
   final String bookingCode;
+  final bool isCounter;
 
   @override
   State<SelectFoodScreen> createState() => _SelectFoodScreenState();
@@ -91,12 +94,19 @@ class _SelectFoodScreenState extends State<SelectFoodScreen> {
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PaymentScreen(
-          movie: widget.movie,
-          cinema: widget.cinema,
-          showtime: widget.showtime,
-          bookingCode: widget.bookingCode,
-        ),
+        builder: (_) => widget.isCounter
+            ? StaffCounterPaymentScreen(
+                movie: widget.movie,
+                cinema: widget.cinema,
+                showtime: widget.showtime,
+                bookingCode: widget.bookingCode,
+              )
+            : PaymentScreen(
+                movie: widget.movie,
+                cinema: widget.cinema,
+                showtime: widget.showtime,
+                bookingCode: widget.bookingCode,
+              ),
       ),
     );
   }

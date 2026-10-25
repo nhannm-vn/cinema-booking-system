@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../auth/repositories/auth_repository.dart';
 import '../../booking/models/booking_model.dart';
 import '../../booking/models/food_item.dart';
 import '../../booking/models/showtime.dart';
+import '../../staff_checkin/repositories/staff_checkin_repository.dart';
 import '../../../shared/models/app_user.dart';
 import '../models/audit_log.dart';
 import '../models/conversation_model.dart';
@@ -382,11 +384,14 @@ class ManagementRepository {
         query = query.where('status', isEqualTo: statusFilter);
       }
 
-      final snap = await query.orderBy('createdAt', descending: true).get();
+      final snap = await query.get();
       if (snap.docs.isNotEmpty) {
         list = snap.docs.map((d) => BookingModel.fromFirestore(d)).toList();
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Error getBookingsForCinema: $e');
+    }
 
     if (list.isEmpty) {
       list = _generateMockBookings(cinemaId);
@@ -738,72 +743,21 @@ class ManagementRepository {
     required String bookingCode,
     required String cinemaId,
     required AppUser actor,
+    bool idChecked = true,
   }) async {
     try {
-      final docRef = _db.collection('bookings').doc(bookingCode);
-      final snap = await docRef.get();
-
-      if (!snap.exists) {
-        return {'success': false, 'message': 'Mã booking không tồn tại trên hệ thống.'};
-      }
-
-      final data = snap.data()!;
-      final bCinemaId = data['cinemaId'] as String? ?? '';
-      if (bCinemaId != cinemaId) {
-        return {'success': false, 'message': 'Vé không thuộc rạp này (${data['cinemaName']}).'};
-      }
-
-      final status = (data['status'] as String? ?? '').toLowerCase();
-      if (status == 'used') {
-        final checkedAt = (data['checkedInAt'] as Timestamp?)?.toDate();
-        final timeStr = checkedAt != null ? DateFormat('HH:mm').format(checkedAt) : '';
-        return {
-          'success': false,
-          'message': 'Vé đã được sử dụng trước đó ${timeStr.isNotEmpty ? "lúc $timeStr" : ""}.'
-        };
-      }
-
-      if (status == 'cancelled') {
-        return {'success': false, 'message': 'Vé này đã bị hủy hoặc hoàn tiền.'};
-      }
-
-      if (status != 'paid') {
-        return {'success': false, 'message': 'Vé chưa thanh toán thành công (Trạng thái: $status).'};
-      }
-
-      final showtimeStart = (data['showtimeStart'] as Timestamp?)?.toDate() ??
-          (data['startTime'] as Timestamp?)?.toDate() ??
-          DateTime.now();
-
-      final now = DateTime.now();
-      // Vào trước tối đa 45 phút, sau tối đa 20 phút
-      if (now.isBefore(showtimeStart.subtract(const Duration(minutes: 45)))) {
-        return {
-          'success': false,
-          'message':
-              'Chưa đến giờ vào rạp. Suất chiếu lúc ${DateFormat('HH:mm').format(showtimeStart)}. Vui lòng chờ đến 45 phút trước giờ chiếu.'
-        };
-      }
-
-      await docRef.update({
-        'status': 'used',
-        'checkedInBy': actor.fullName,
-        'checkedInAt': FieldValue.serverTimestamp(),
-      });
-
-      await logAudit(
-        actor: actor,
-        action: 'checkIn',
-        targetType: 'booking',
-        targetId: bookingCode,
+      final staffRepo = StaffCheckinRepository(firestore: _db);
+      final actionResult = await staffRepo.confirmCheckIn(
+        bookingCode: bookingCode,
         cinemaId: cinemaId,
-        reason: 'Soát vé thành công cho khách',
+        actor: actor,
+        idChecked: idChecked,
       );
 
       return {
-        'success': true,
-        'booking': BookingModel.fromFirestore(snap),
-        'message': 'Soát vé thành công! Mời khách vào phòng chiếu.'
+        'success': actionResult.isSuccess,
+        'booking': actionResult.booking,
+        'message': actionResult.message,
       };
     } catch (e) {
       return {'success': false, 'message': 'Lỗi kiểm tra vé: $e'};

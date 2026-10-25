@@ -94,16 +94,16 @@ class _StaffFoodScreenState extends State<StaffFoodScreen> {
     // Filter only bookings with foods
     final foodBookings = prov.bookings.where((b) => b.foods.isNotEmpty).toList();
 
-    // Split into Pending and Delivered
+    // Split into Pending and Delivered based on real foodStatus in DB
     final pendingOrders = foodBookings.where((b) {
-      final isDelivered = b.foodSummary?.contains('đã giao') ?? false;
-      return !isDelivered && b.status != 'cancelled';
-    }).toList();
+      return b.foodStatus == 'pending' && b.status != 'cancelled';
+    }).toList()
+      ..sort((a, b) => a.showtimeStart.compareTo(b.showtimeStart));
 
     final deliveredOrders = foodBookings.where((b) {
-      final isDelivered = b.foodSummary?.contains('đã giao') ?? false;
-      return isDelivered || b.status == 'used';
-    }).toList();
+      return b.foodStatus == 'delivered';
+    }).toList()
+      ..sort((a, b) => b.showtimeStart.compareTo(a.showtimeStart));
 
     final currentList = _tabIndex == 0 ? pendingOrders : deliveredOrders;
 
