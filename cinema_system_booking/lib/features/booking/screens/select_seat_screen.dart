@@ -26,11 +26,13 @@ class SelectSeatScreen extends StatefulWidget {
     required this.movie,
     required this.cinema,
     required this.showtime,
+    this.isCounter = false,
   });
 
   final Movie movie;
   final Cinema cinema;
   final Showtime showtime;
+  final bool isCounter;
 
   @override
   State<SelectSeatScreen> createState() => _SelectSeatScreenState();
@@ -80,6 +82,7 @@ class _SelectSeatScreenState extends State<SelectSeatScreen> {
             cinema: widget.cinema,
             showtime: widget.showtime,
             bookingCode: bookingCode,
+            isCounter: widget.isCounter,
           ),
         ),
       );
