@@ -7,8 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../auth/providers/auth_provider.dart';
-import '../../../booking/models/booking_model.dart';
-import '../../repositories/management_repository.dart';
+import '../../../staff_checkin/models/ticket_checkin_result.dart';
+import '../../../staff_checkin/repositories/staff_checkin_repository.dart';
 
 class StaffCheckinScreen extends StatefulWidget {
   const StaffCheckinScreen({super.key});
@@ -19,7 +19,7 @@ class StaffCheckinScreen extends StatefulWidget {
 
 class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
   final MobileScannerController _scannerController = MobileScannerController();
-  final ManagementRepository _repo = ManagementRepository();
+  final StaffCheckinRepository _repo = StaffCheckinRepository();
   bool _isScanning = true;
 
   @override
@@ -73,6 +73,48 @@ class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.zero),
               ),
             ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'GỢI Ý MÃ TEST DEMO:',
+              style: AppTextStyles.captionUppercase.copyWith(
+                color: AppColors.muted,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                ActionChip(
+                  label: const Text('BK92M7XP (Hợp lệ, T16)'),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                  labelStyle: AppTextStyles.caption.copyWith(color: AppColors.primary),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  onPressed: () {
+                    codeCtrl.text = 'BK92M7XP';
+                  },
+                ),
+                ActionChip(
+                  label: const Text('BK7721AA (Đã dùng)'),
+                  backgroundColor: AppColors.canvas,
+                  labelStyle: AppTextStyles.caption.copyWith(color: AppColors.body),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  onPressed: () {
+                    codeCtrl.text = 'BK7721AA';
+                  },
+                ),
+                ActionChip(
+                  label: const Text('BK333TB (Sai rạp)'),
+                  backgroundColor: AppColors.canvas,
+                  labelStyle: AppTextStyles.caption.copyWith(color: AppColors.body),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  onPressed: () {
+                    codeCtrl.text = 'BK333TB';
+                  },
+                ),
+              ],
+            ),
           ],
         ),
         actions: [
@@ -105,35 +147,29 @@ class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
     final user = context.read<AuthProvider>().currentUser;
     final cid = user.cinemaId ?? 'cn_q1';
 
-    final result = await _repo.checkInTicket(
+    // Bước 1: Gọi API thẩm định vé (Verify Ticket)
+    final verification = await _repo.verifyTicket(
       bookingCode: bookingCode,
       cinemaId: cid,
-      actor: user,
     );
 
     if (!mounted) return;
 
-    final isSuccess = result['success'] == true;
-    final message = result['message'] as String? ?? '';
-    final booking = result['booking'] as BookingModel?;
-
     _showResultBottomSheet(
-      isSuccess: isSuccess,
-      message: message,
-      booking: booking,
+      verification: verification,
       bookingCode: bookingCode,
     );
   }
 
   void _showResultBottomSheet({
-    required bool isSuccess,
-    required String message,
-    BookingModel? booking,
+    required TicketVerificationResult verification,
     required String bookingCode,
   }) {
     bool idChecked = false;
-    final isAgeRestricted = booking != null &&
-        (booking.ageRating == 'T16' || booking.ageRating == 'T18');
+    bool isSubmitting = false;
+    final isSuccess = verification.isSuccess;
+    final booking = verification.booking;
+    final requiresIdCheck = verification.requiresIdCheck;
 
     showModalBottomSheet(
       context: context,
@@ -171,7 +207,7 @@ class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  message,
+                  verification.message,
                   style: AppTextStyles.bodySm.copyWith(
                     color: isSuccess ? AppColors.ink : AppColors.warning,
                   ),
@@ -202,19 +238,35 @@ class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
                           style: AppTextStyles.titleSm
                               .copyWith(color: AppColors.primary),
                         ),
-                        if (booking.foodSummary != null &&
+                        if (verification.hasFoodPending &&
+                            booking.foodSummary != null &&
                             booking.foodSummary!.isNotEmpty) ...[
                           const SizedBox(height: 4),
-                          Text(
-                            'Đồ ăn kèm: ${booking.foodSummary} (Nhận tại quầy)',
-                            style: AppTextStyles.caption
-                                .copyWith(color: AppColors.ink),
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.xxs),
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            child: Row(
+                              children: [
+                                const Icon(LucideIcons.utensils,
+                                    size: 16, color: AppColors.primary),
+                                const SizedBox(width: AppSpacing.xxs),
+                                Expanded(
+                                  child: Text(
+                                    'Đồ ăn kèm: ${booking.foodSummary} (Nhận tại quầy)',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.ink,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  if (isAgeRestricted) ...[
+                  if (requiresIdCheck) ...[
                     const SizedBox(height: AppSpacing.xs),
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.xxs),
@@ -227,9 +279,12 @@ class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
                           Checkbox(
                             value: idChecked,
                             activeColor: AppColors.primary,
-                            onChanged: (val) {
-                              setSheetState(() => idChecked = val ?? false);
-                            },
+                            onChanged: isSubmitting
+                                ? null
+                                : (val) {
+                                    setSheetState(
+                                        () => idChecked = val ?? false);
+                                  },
                           ),
                           Expanded(
                             child: Text(
@@ -246,15 +301,60 @@ class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
                   ],
                 ],
                 const SizedBox(height: AppSpacing.md),
-                AppButton.primary(
-                  text: isSuccess ? 'XÁC NHẬN CHO VÀO' : 'QUÉT TIẾP',
-                  onPressed: (isAgeRestricted && !idChecked)
-                      ? null
-                      : () {
-                          Navigator.of(ctx).pop();
-                          setState(() => _isScanning = true);
-                        },
-                ),
+                if (!isSuccess)
+                  AppButton.outline(
+                    text: 'QUÉT TIẾP',
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      setState(() => _isScanning = true);
+                    },
+                  )
+                else
+                  AppButton.primary(
+                    text: isSubmitting ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN CHO VÀO',
+                    onPressed: (requiresIdCheck && !idChecked) || isSubmitting
+                        ? null
+                        : () async {
+                            setSheetState(() => isSubmitting = true);
+                            final messenger = ScaffoldMessenger.of(context);
+                            final navigator = Navigator.of(ctx);
+                            final user =
+                                context.read<AuthProvider>().currentUser;
+                            final cid = user.cinemaId ?? 'cn_q1';
+
+                            // Bước 2: Gọi API xác nhận cho vào (Confirm Check-in)
+                            final actionResult = await _repo.confirmCheckIn(
+                              bookingCode: bookingCode,
+                              cinemaId: cid,
+                              actor: user,
+                              idChecked: idChecked,
+                            );
+
+                            navigator.pop();
+
+                            if (actionResult.isSuccess) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Đã cho vào phòng chiếu đơn #${bookingCode.toUpperCase()}',
+                                  ),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                            } else {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(actionResult.message),
+                                  backgroundColor: AppColors.warning,
+                                ),
+                              );
+                            }
+
+                            if (mounted) {
+                              setState(() => _isScanning = true);
+                            }
+                          },
+                  ),
               ],
             ),
           );
@@ -278,6 +378,24 @@ class _StaffCheckinScreenState extends State<StaffCheckinScreen> {
             letterSpacing: 1.5,
           ),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Tạo vé mẫu lên Firestore DB',
+            icon: const Icon(LucideIcons.database, color: AppColors.primary),
+            onPressed: () async {
+              final count = await _repo.seedDemoBookings();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Đã nạp thành công $count mã vé (BK92M7XP, BK7721AA, BK333TB) lên Firestore DB!',
+                  ),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

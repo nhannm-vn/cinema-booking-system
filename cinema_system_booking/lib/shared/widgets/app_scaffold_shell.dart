@@ -13,6 +13,7 @@ import '../../features/management/dashboard/screens/manager_dashboard_screen.dar
 import '../../features/management/hub/screens/management_hub_screen.dart';
 import '../../features/management/staff_tools/screens/staff_checkin_screen.dart';
 import '../../features/management/staff_tools/screens/staff_food_screen.dart';
+import '../../features/management/staff_tools/screens/staff_counter_screen.dart';
 import '../../features/movies/screens/home_screen.dart';
 import '../../features/notifications/providers/notification_provider.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
@@ -225,6 +226,8 @@ class _AppScaffoldShellState extends State<AppScaffoldShell> {
         case 1:
           return const StaffFoodScreen();
         case 2:
+          return const StaffCounterScreen();
+        case 3:
           return const ManagementHubScreen();
       }
     }

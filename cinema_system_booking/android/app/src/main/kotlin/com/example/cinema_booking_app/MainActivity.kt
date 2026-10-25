@@ -1,4 +1,4 @@
-package com.example.cinema_system_booking
+package com.example.cinema_booking_app
 
 import io.flutter.embedding.android.FlutterActivity
 

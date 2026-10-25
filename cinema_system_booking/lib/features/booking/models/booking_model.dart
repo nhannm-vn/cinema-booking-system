@@ -17,6 +17,7 @@ class BookingModel {
     required this.seatIds,
     this.foods = const [],
     this.foodSummary,
+    this.foodStatus = 'none',
     required this.totalAmount,
     required this.status,
     this.paymentMethod,
@@ -39,6 +40,7 @@ class BookingModel {
   final List<String> seatIds;
   final List<Map<String, dynamic>> foods;
   final String? foodSummary;
+  final String foodStatus; // 'none', 'pending', 'delivered'
   final int totalAmount;
   final String status; // 'holding', 'paid', 'used', 'noshow', 'cancelled'
   final String? paymentMethod;
@@ -95,6 +97,7 @@ class BookingModel {
       seatIds: seatIds,
       foods: rawFoods,
       foodSummary: computedFoodSummary,
+      foodStatus: (data['foodStatus'] as String? ?? (rawFoods.isNotEmpty ? 'pending' : 'none')).toLowerCase(),
       totalAmount: total,
       status: data['status'] as String? ?? 'paid',
       paymentMethod: data['paymentMethod'] as String?,
@@ -105,6 +108,7 @@ class BookingModel {
 
   BookingModel copyWith({
     String? status,
+    String? foodStatus,
   }) {
     return BookingModel(
       id: id,
@@ -122,6 +126,7 @@ class BookingModel {
       seatIds: seatIds,
       foods: foods,
       foodSummary: foodSummary,
+      foodStatus: foodStatus ?? this.foodStatus,
       totalAmount: totalAmount,
       status: status ?? this.status,
       paymentMethod: paymentMethod,

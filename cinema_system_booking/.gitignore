@@ -49,3 +49,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Local AI Documentation
+docs/
