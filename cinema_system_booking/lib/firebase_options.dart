@@ -23,10 +23,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
       case TargetPlatform.windows:
       case TargetPlatform.linux:
@@ -54,5 +51,14 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1049050666616',
     projectId: 'cinemabookingsystem-fcdb3',
     storageBucket: 'cinemabookingsystem-fcdb3.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDfgln_emsIMYNqwL2QPfeDYyr2RkyiMsI',
+    appId: '1:1049050666616:ios:c84d4139550a35ba903f8d',
+    messagingSenderId: '1049050666616',
+    projectId: 'cinemabookingsystem-fcdb3',
+    storageBucket: 'cinemabookingsystem-fcdb3.firebasestorage.app',
+    iosBundleId: 'com.example.cinemaBookingApp',
   );
 }
