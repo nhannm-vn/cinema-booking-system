@@ -1,23 +1,24 @@
-name: Build iOS IPA
+﻿name: Build iOS IPA
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - dev
-      - main
-      - config
+      - '**'
 
 jobs:
   build-ios:
     name: Build iOS IPA
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: cinema_system_booking
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Java (for Gradle / dependencies)
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -51,5 +52,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cinema-booking-app-ios
-          path: cinema_booking_app.ipa
+          path: cinema_system_booking/cinema_booking_app.ipa
           retention-days: 7
